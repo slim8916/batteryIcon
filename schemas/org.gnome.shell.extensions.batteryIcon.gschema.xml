@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.batteryIcon" path="/org/gnome/shell/extensions/batteryIcon/">
+    <key name="charging-threshold" type="i">
+      <default>80</default>
+      <range min="0" max="100"/>
+      <summary>Charging threshold percentage</summary>
+      <description>
+        The battery indicator will be shown when the battery is charging and
+        the percentage is below this threshold. Range: 0-100.
+      </description>
+    </key>
+    <key name="discharging-threshold" type="i">
+      <default>90</default>
+      <range min="0" max="100"/>
+      <summary>Discharging threshold percentage</summary>
+      <description>
+        The battery indicator will be shown when the battery is discharging and
+        the percentage is below this threshold. Range: 0-100.
+      </description>
+    </key>
+  </schema>
+</schemalist>

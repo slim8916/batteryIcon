@@ -1,0 +1,8 @@
+{
+  "uuid": "batteryIcon@slim8916.github.io",
+  "name": "Battery Icon",
+  "settings-schema": "org.gnome.shell.extensions.batteryIcon",
+  "shell-version": ["45","48"],
+  "description": "Adds Custom Battery icon to the system menu.",
+  "version": 1
+}
