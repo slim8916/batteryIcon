@@ -2,7 +2,6 @@
 
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
-import Gdk from 'gi://Gdk';
 
 import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
@@ -32,47 +31,19 @@ export default class BatteryIconPreferences extends ExtensionPreferences {
      * @param {Adw.PreferencesWindow} window - The preferences window
      */
     fillPreferencesWindow(window) {
-        try {
-            Adw.init();
+        const settings = this.getSettings();
 
-            const settings = this.getSettings();
-            this._loadStylesheet();
+        const page = this._createPreferencesPage();
+        const group = this._createPreferencesGroup();
 
-            const page = this._createPreferencesPage();
-            const group = this._createPreferencesGroup();
+        window.add(page);
+        page.add(group);
 
-            window.add(page);
-            page.add(group);
+        // Add threshold controls
+        this._addChargingThresholdRow(group, settings);
+        this._addDischargingThresholdRow(group, settings);
 
-            // Add threshold controls
-            this._addChargingThresholdRow(group, settings);
-            this._addDischargingThresholdRow(group, settings);
-
-            window.set_default_size(WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT);
-        } catch (error) {
-            logError(error, '[BatteryIcon] Error filling preferences window');
-        }
-    }
-
-    /**
-     * Load custom stylesheet if available
-     * @private
-     */
-    _loadStylesheet() {
-        try {
-            const cssProvider = new Gtk.CssProvider();
-            const stylesheetPath = `${this.path}/stylesheet.css`;
-
-            cssProvider.load_from_path(stylesheetPath);
-            Gtk.StyleContext.add_provider_for_display(
-                Gdk.Display.get_default(),
-                cssProvider,
-                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-            );
-        } catch (error) {
-            // Stylesheet is optional, continue without it
-            log('[BatteryIcon] No custom stylesheet found, using default styles');
-        }
+        window.set_default_size(WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT);
     }
 
     /**

@@ -8,9 +8,7 @@ import UPowerGlib from 'gi://UPowerGlib';
 import Rsvg from 'gi://Rsvg';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
-
-// Cairo is not a GI module; use imports
-const Cairo = imports.cairo;
+import Cairo from 'cairo';
 
 // Settings keys
 const CHARGING_KEY = 'charging-threshold';
@@ -152,7 +150,7 @@ class CircleIndicator extends St.DrawingArea {
 
             return tintSurface;
         } catch (error) {
-            logError(error, `[BatteryIcon] Failed to load charging icon`);
+            console.error(`[BatteryIcon] Failed to load charging icon`, error);
             return null;
         }
     }
@@ -294,17 +292,13 @@ export default class BatteryIconExtension extends Extension {
      * Enable the extension
      */
     enable() {
-        try {
-            this._initializeSettings();
-            this._initializeUPower();
-            this._createIndicator();
-            this._setupSignals();
-            this._startUpdateTimer();
+        this._initializeSettings();
+        this._initializeUPower();
+        this._createIndicator();
+        this._setupSignals();
+        this._startUpdateTimer();
 
-            log('[BatteryIcon] Extension enabled successfully');
-        } catch (error) {
-            logError(error, '[BatteryIcon] Failed to enable extension');
-        }
+        console.debug('[BatteryIcon] Extension enabled successfully');
     }
 
     /**
@@ -351,7 +345,7 @@ export default class BatteryIconExtension extends Extension {
             this._stockIcon.hide();
         } else {
             // Fallback if panel structure changed
-            log('[BatteryIcon] Warning: Using fallback positioning');
+            console.warn('[BatteryIcon] Warning: Using fallback positioning');
             Main.panel._rightBox.insert_child_at_index(this._indicator, 0);
         }
     }
@@ -408,34 +402,30 @@ export default class BatteryIconExtension extends Extension {
      * @private
      */
     _updateIndicator() {
-        try {
-            const percentage = Math.round(this._device.percentage ?? -1);
-            const isCharging = this._device.state === UPowerGlib.DeviceState.CHARGING;
+        const percentage = Math.round(this._device.percentage ?? -1);
+        const isCharging = this._device.state === UPowerGlib.DeviceState.CHARGING;
 
-            // Hide indicator if battery info unavailable
-            if (percentage < MIN_BATTERY_PERCENT) {
-                this._indicator?.hide();
-                return;
-            }
+        // Hide indicator if battery info unavailable
+        if (percentage < MIN_BATTERY_PERCENT) {
+            this._indicator?.hide();
+            return;
+        }
 
-            // Update indicator display
-            this._indicator?.update({percentage, isCharging});
+        // Update indicator display
+        this._indicator?.update({percentage, isCharging});
 
-            // Determine visibility based on thresholds
-            const chargingThreshold = this._getValidatedThreshold(CHARGING_KEY);
-            const dischargingThreshold = this._getValidatedThreshold(DISCHARGING_KEY);
+        // Determine visibility based on thresholds
+        const chargingThreshold = this._getValidatedThreshold(CHARGING_KEY);
+        const dischargingThreshold = this._getValidatedThreshold(DISCHARGING_KEY);
 
-            const shouldShow = isCharging
-                ? (percentage < chargingThreshold || percentage < dischargingThreshold)
-                : (percentage < dischargingThreshold);
+        const shouldShow = isCharging
+            ? (percentage < chargingThreshold || percentage < dischargingThreshold)
+            : (percentage < dischargingThreshold);
 
-            if (shouldShow) {
-                this._indicator?.show();
-            } else {
-                this._indicator?.hide();
-            }
-        } catch (error) {
-            logError(error, '[BatteryIcon] Error updating indicator');
+        if (shouldShow) {
+            this._indicator?.show();
+        } else {
+            this._indicator?.hide();
         }
     }
 
@@ -443,17 +433,13 @@ export default class BatteryIconExtension extends Extension {
      * Disable the extension and clean up resources
      */
     disable() {
-        try {
-            this._stopUpdateTimer();
-            this._disconnectSignals();
-            this._restoreStockIcon();
-            this._destroyIndicator();
-            this._cleanupReferences();
+        this._stopUpdateTimer();
+        this._disconnectSignals();
+        this._restoreStockIcon();
+        this._destroyIndicator();
+        this._cleanupReferences();
 
-            log('[BatteryIcon] Extension disabled successfully');
-        } catch (error) {
-            logError(error, '[BatteryIcon] Error during disable');
-        }
+        console.debug('[BatteryIcon] Extension disabled successfully');
     }
 
     /**
@@ -473,12 +459,8 @@ export default class BatteryIconExtension extends Extension {
      */
     _disconnectSignals() {
         for (const signalId of this._signals ?? []) {
-            try {
-                if (this._settings && signalId) {
-                    this._settings.disconnect(signalId);
-                }
-            } catch (error) {
-                logError(error, '[BatteryIcon] Error disconnecting signal');
+            if (this._settings && signalId) {
+                this._settings.disconnect(signalId);
             }
         }
         this._signals = [];
