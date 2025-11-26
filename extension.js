@@ -342,7 +342,14 @@ export default class BatteryIconExtension extends Extension {
         if (this._iconParent && this._stockIcon) {
             this._iconParent.insert_child_above(this._indicator, this._stockIcon);
             this._stockWasVisible = this._stockIcon.visible;
-            this._stockIcon.hide();
+
+            // Defer hiding to ensure panel is fully initialized
+            GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+                if (this._stockIcon) {
+                    this._stockIcon.hide();
+                }
+                return GLib.SOURCE_REMOVE;
+            });
         } else {
             // Fallback if panel structure changed
             console.warn('[BatteryIcon] Warning: Using fallback positioning');
@@ -404,6 +411,30 @@ export default class BatteryIconExtension extends Extension {
     _updateIndicator() {
         const percentage = Math.round(this._device.percentage ?? -1);
         const isCharging = this._device.state === UPowerGlib.DeviceState.CHARGING;
+
+        // Try to find stock icon if not found during initial setup
+        if (!this._stockIcon) {
+            this._system = Main.panel.statusArea.quickSettings?._system ?? null;
+            this._stockIcon = this._system?._indicator ?? null;
+            this._iconParent = this._stockIcon?.get_parent() ?? null;
+
+            // Reposition custom indicator if we found the stock icon
+            if (this._iconParent && this._stockIcon && this._indicator) {
+                this._stockWasVisible = this._stockIcon.visible;
+                if (this._indicator.get_parent() !== this._iconParent) {
+                    const oldParent = this._indicator.get_parent();
+                    if (oldParent) {
+                        oldParent.remove_child(this._indicator);
+                    }
+                    this._iconParent.insert_child_above(this._indicator, this._stockIcon);
+                }
+            }
+        }
+
+        // Ensure stock icon stays hidden
+        if (this._stockIcon) {
+            this._stockIcon.hide();
+        }
 
         // Hide indicator if battery info unavailable
         if (percentage < MIN_BATTERY_PERCENT) {
